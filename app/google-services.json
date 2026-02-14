@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "883841664789",
+    "project_id": "collegebustracker-85e6a",
+    "storage_bucket": "collegebustracker-85e6a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:883841664789:android:1a224256d9ceea76274b1c",
+        "android_client_info": {
+          "package_name": "com.example.collegebustracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtH5ZyxrNn-e1AEZtqiASrkKpkdeppnKI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

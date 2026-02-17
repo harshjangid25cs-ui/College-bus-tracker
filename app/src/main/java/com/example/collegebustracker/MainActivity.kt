@@ -368,8 +368,11 @@ fun DriverMapScreen(navController: NavController, plate: String) {
 
             val request = LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY,
-                4000L
-            ).build()
+                1500L
+            )
+                .setMinUpdateIntervalMillis(1000L)
+                .setWaitForAccurateLocation(false)
+                .build()
 
             val callback = object : LocationCallback() {
 
@@ -377,31 +380,22 @@ fun DriverMapScreen(navController: NavController, plate: String) {
 
                     val location = result.lastLocation ?: return
 
-                    // 🔐 SAFETY CHECK — DO NOT UPDATE IF OFFLINE
-                    busRef.child("isLive").get().addOnSuccessListener { snapshot ->
+                    val latLng = LatLng(
+                        location.latitude,
+                        location.longitude
+                    )
 
-                        val live =
-                            snapshot.getValue(Boolean::class.java) ?: false
+                    cameraPositionState.position =
+                        CameraPosition.fromLatLngZoom(latLng, 16f)
 
-                        if (!live) return@addOnSuccessListener
-
-                        val latLng = LatLng(
-                            location.latitude,
-                            location.longitude
+                    busRef.updateChildren(
+                        mapOf(
+                            "latitude" to location.latitude,
+                            "longitude" to location.longitude,
+                            "speed" to (location.speed * 3.6),
+                            "timestamp" to System.currentTimeMillis()
                         )
-
-                        cameraPositionState.position =
-                            CameraPosition.fromLatLngZoom(latLng, 16f)
-
-                        busRef.updateChildren(
-                            mapOf(
-                                "latitude" to location.latitude,
-                                "longitude" to location.longitude,
-                                "speed" to (location.speed * 3.6),
-                                "timestamp" to System.currentTimeMillis()
-                            )
-                        )
-                    }
+                    )
                 }
             }
 
@@ -430,6 +424,7 @@ fun DriverMapScreen(navController: NavController, plate: String) {
             onDispose {}
         }
     }
+
 
     Box(Modifier.fillMaxSize()) {
 
@@ -481,27 +476,27 @@ fun DriverMapScreen(navController: NavController, plate: String) {
 fun StudentScreen() {
 
     val database = Firebase.database("https://collegebustracker-85e6a-default-rtdb.asia-southeast1.firebasedatabase.app")
-    val busesRef = database.getReference("buses")
+    val busRef = database.getReference("buses").child("YOUR_PLATE")   // replace with real plate
 
     var busLocation by remember { mutableStateOf<LatLng?>(null) }
 
     LaunchedEffect(Unit) {
-        busesRef.addValueEventListener(object : ValueEventListener {
+
+        busRef.addValueEventListener(object : ValueEventListener {
+
             override fun onDataChange(snapshot: DataSnapshot) {
 
-                snapshot.children.forEach {
+                val isLive =
+                    snapshot.child("isLive").getValue(Boolean::class.java) ?: false
 
-                    val isLive =
-                        it.child("isLive").getValue(Boolean::class.java) ?: false
+                if (isLive) {
+                    val lat =
+                        snapshot.child("latitude").getValue(Double::class.java)
+                    val lng =
+                        snapshot.child("longitude").getValue(Double::class.java)
 
-                    if (isLive) {
-                        val lat =
-                            it.child("latitude").getValue(Double::class.java)
-                        val lng =
-                            it.child("longitude").getValue(Double::class.java)
-
-                        if (lat != null && lng != null)
-                            busLocation = LatLng(lat, lng)
+                    if (lat != null && lng != null) {
+                        busLocation = LatLng(lat, lng)
                     }
                 }
             }
@@ -529,3 +524,4 @@ fun StudentScreen() {
         }
     }
 }
+
